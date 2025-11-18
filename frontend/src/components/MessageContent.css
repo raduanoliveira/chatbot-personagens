@@ -1,0 +1,135 @@
+.message-content {
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+.message-content--assistant {
+    /* Estilos específicos para mensagens do assistente */
+}
+
+/* Estilos para elementos Markdown */
+.markdown-p {
+    margin: 0.5em 0;
+}
+
+.markdown-p:first-child {
+    margin-top: 0;
+}
+
+.markdown-p:last-child {
+    margin-bottom: 0;
+}
+
+.markdown-strong {
+    font-weight: 600;
+    color: inherit;
+}
+
+.markdown-em {
+    font-style: italic;
+}
+
+.markdown-code-inline {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+}
+
+.chat-message--assistant .markdown-code-inline {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-message--user .markdown-code-inline {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.markdown-code-block {
+    display: block;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    margin: 0.5em 0;
+}
+
+.chat-message--assistant .markdown-code-block {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.markdown-pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.markdown-ul,
+.markdown-ol {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+}
+
+.markdown-li {
+    margin: 0.25em 0;
+}
+
+.markdown-blockquote {
+    border-left: 3px solid rgba(0, 0, 0, 0.2);
+    padding-left: 1em;
+    margin: 0.5em 0;
+    font-style: italic;
+    color: rgba(0, 0, 0, 0.7);
+}
+
+.chat-message--assistant .markdown-blockquote {
+    border-left-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.markdown-h1,
+.markdown-h2,
+.markdown-h3 {
+    margin: 0.75em 0 0.5em;
+    font-weight: 600;
+}
+
+.markdown-h1:first-child,
+.markdown-h2:first-child,
+.markdown-h3:first-child {
+    margin-top: 0;
+}
+
+.markdown-h1 {
+    font-size: 1.5em;
+}
+
+.markdown-h2 {
+    font-size: 1.3em;
+}
+
+.markdown-h3 {
+    font-size: 1.1em;
+}
+
+.markdown-link {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 0, 0, 0.3);
+    transition: text-decoration-color 0.2s;
+}
+
+.markdown-link:hover {
+    text-decoration-color: rgba(0, 0, 0, 0.6);
+}
+
+.chat-message--assistant .markdown-link {
+    text-decoration-color: rgba(255, 255, 255, 0.5);
+}
+
+.chat-message--assistant .markdown-link:hover {
+    text-decoration-color: rgba(255, 255, 255, 0.8);
+}
+
