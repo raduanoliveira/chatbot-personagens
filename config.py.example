@@ -1,0 +1,17 @@
+# Arquivo de configuração
+# Copie este arquivo para config.py e preencha com suas credenciais
+
+# Chave de API da OpenAI
+# Obtenha sua chave em: https://platform.openai.com/api-keys
+OPENAI_API_KEY = "sua-chave-aqui"
+
+# Instruções:
+# 1. Copie este arquivo: cp config.py.example config.py
+# 2. Substitua "sua-chave-aqui" pela sua chave real da OpenAI
+# 3. Não compartilhe o arquivo config.py ou faça commit dele no Git
+# 4. Adicione config.py ao .gitignore para manter sua chave segura
+
+# Nota: Este arquivo é usado pelos clientes antigos (main.py e app.py)
+# Para o backend FastAPI, use backend/.env
+# Para o frontend, use frontend/.env
+
