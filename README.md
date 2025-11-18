@@ -1,210 +1,450 @@
-# Chatbot Mario Bros 🍄
+# Chatbot Personagens 💬
 
-Agora o projeto possui três camadas:
+Sistema completo de chatbot com gerenciamento de personagens, interface web moderna e moderação de conteúdo integrada.
 
-1. **FastAPI + MySQL** para um backend com CRUD de personagens/memórias.
-2. **Frontend React (Vite)** para gerenciar os personagens via navegador.
-3. **Clientes existentes** (CLI `main.py` e Streamlit `app.py`) para conversar com o personagem escolhido.
+## 🚀 Funcionalidades
+
+- **Gerenciamento de Personagens**: Interface web completa para criar, editar e gerenciar personagens de chatbot
+- **Chat Interativo**: Interface de chat em tempo real com os personagens
+- **Moderação de Conteúdo**: Sistema de guardrails integrado para prevenir conteúdo inadequado
+- **Pré-visualização de Imagens**: Preview automático ao adicionar URLs de imagens
+- **Layout Responsivo**: Interface otimizada para desktop e mobile
+- **Validação de Formulários**: Validação completa com feedback visual
 
 ---
 
-## 1. Dependências principais
+## 📋 Pré-requisitos
 
-- Python 3.10+
-- Node 18+
-- MySQL 8 (ou compatível)
-- Chave da OpenAI
+- Python 3.12+
+- Node.js 20+
+- MySQL 8.0+ (ou compatível)
+- Chave da API OpenAI
+- Docker e Docker Compose (para deploy com containers)
 
-Crie e ative o ambiente virtual e instale as dependências Python:
+---
+
+## 🏗️ Arquitetura
+
+O projeto possui três camadas principais:
+
+1. **Backend (FastAPI + MySQL)**: API REST para gerenciamento de personagens e chat
+2. **Frontend (React + Vite)**: Interface web moderna e responsiva
+3. **Moderação (Guardrails)**: Sistema de moderação de conteúdo usando ML
+
+---
+
+## 🛠️ Instalação e Configuração
+
+### 1. Dependências Python
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
----
+### 2. Backend (FastAPI)
 
-## 2. Backend (FastAPI + MySQL)
+#### Estrutura
+```
+backend/
+├── app/
+│   ├── api/routes/      # Rotas da API (characters, chat)
+│   ├── core/            # Configurações e guardrails
+│   ├── models/          # Modelos SQLAlchemy
+│   └── schemas/         # Schemas Pydantic
+├── alembic/             # Migrations do banco
+└── env.example          # Modelo de variáveis de ambiente
+```
 
-Estrutura básica dentro de `backend/`:
-- `app/` → código FastAPI (rotas, modelos, schemas)
-- `alembic/` → migrations versionadas
-- `env.example` → modelo de variáveis de ambiente
+#### Configuração
 
-### Configuração
-1. Copie `backend/env.example` para `backend/.env` e ajuste:
-   ```env
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_NAME=mario_chat
-   DB_USER=usuario
-   DB_PASSWORD=senha
-   OPENAI_API_KEY=sua-chave
-   # (Opcional) Para sobrepor a URL completa:
-   # DATABASE_URL=mysql+pymysql://usuario:senha@localhost:3306/mario_chat
-   ```
-2. Rode as migrations (necessário MySQL acessível):
-   ```bash
-   cd backend
-   alembic upgrade head
-   ```
-3. Suba o servidor:
-   ```bash
-   uvicorn app.main:app --reload --app-dir backend
-   ```
-   A API estará em `http://localhost:8000` (rota `/api/characters`).
+1. Copie `backend/env.example` para `backend/.env` e configure:
 
----
+```env
+# Banco de Dados
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=mario_chat
+DB_USER=usuario
+DB_PASSWORD=senha
 
-## 3. Frontend (React + Vite)
+# OpenAI
+OPENAI_API_KEY=sua-chave-aqui
 
-Localizado em `frontend/`.
+# Moderação de Conteúdo
+MODERATION_ENABLED=true
+MODERATION_LEVEL=moderate  # strict, moderate, permissive
+```
+
+2. Execute as migrations:
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+3. Inicie o servidor:
+
+```bash
+uvicorn app.main:app --reload --app-dir backend
+```
+
+A API estará disponível em `http://localhost:8000`
+- Documentação: `http://localhost:8000/docs`
+- Endpoints: `/api/characters`, `/api/chat`
+
+### 3. Frontend (React + Vite)
+
+#### Estrutura
+```
+frontend/
+├── src/
+│   ├── api/             # Cliente API
+│   ├── components/      # Componentes React
+│   ├── pages/           # Páginas principais
+│   └── types/           # Tipos TypeScript
+├── public/              # Arquivos estáticos
+└── Dockerfile           # Build de produção
+```
+
+#### Configuração
 
 1. Instale as dependências:
-   ```bash
-   cd frontend
-   npm install
-   ```
-2. Copie `frontend/env.example` para `frontend/.env` e ajuste o `VITE_API_URL`.
-3. Execute em modo dev:
-   ```bash
-   npm run dev
-   ```
-   Abra `http://localhost:5173` para acessar o painel CRUD dos personagens.
 
-Para gerar a build de produção:
+```bash
+cd frontend
+npm install
+```
+
+2. Configure a URL da API (opcional):
+
+```bash
+cp frontend/env.example frontend/.env
+# Edite VITE_API_URL se necessário
+```
+
+3. Execute em modo desenvolvimento:
+
+```bash
+npm run dev
+```
+
+Acesse `http://localhost:5173` para a interface web.
+
+4. Build de produção:
+
 ```bash
 npm run build
 ```
 
----
-
-## 4. Clientes para conversar com o personagem
-
-Você continua podendo conversar com os personagens diretamente:
-
-### Streamlit (interface rápida)
-```bash
-streamlit run app.py
-```
-
-### Linha de comando
-```bash
-python main.py
-```
-
-> **Importante:** configure a chave da OpenAI via `config.py`, `.env` ou variável de ambiente antes de executar esses clientes.
+Os arquivos estarão em `frontend/dist/`.
 
 ---
 
-## 5. Deploy com Docker 🐳
+## 🐳 Deploy com Docker
 
-A forma mais simples de fazer deploy é usando Docker Compose. Tudo está configurado e pronto!
+A forma mais simples de fazer deploy é usando Docker Compose.
 
 ### Pré-requisitos
 - Docker instalado e rodando
 - Docker Compose instalado
 
-### Passos para deploy
+### Passos para Deploy
 
 1. **Configure as variáveis de ambiente:**
-   ```bash
-   cp docker-compose.env.example .env
-   ```
-   Edite o arquivo `.env` e configure:
-   - `OPENAI_API_KEY`: sua chave da OpenAI
-   - `DB_PASSWORD`: senha do banco de dados (opcional, padrão: `secret`)
-   - `MYSQL_ROOT_PASSWORD`: senha root do MySQL (opcional, padrão: `rootpassword`)
 
-2. **Inicie todos os serviços:**
-   
-   **Opção 1 - Usando Make (recomendado):**
-   ```bash
-   make docker-up
-   ```
-   
-   **Opção 2 - Usando Docker Compose diretamente:**
-   ```bash
-   docker compose up -d
-   ```
-   
-   Isso irá:
-   - Criar e iniciar o MySQL
-   - Construir e iniciar o backend (FastAPI)
-   - Construir e iniciar o frontend (React + Nginx)
-   - Executar as migrations automaticamente (criando o banco e inserindo o Mario)
-
-3. **Acesse a aplicação:**
-   - Frontend: http://localhost
-   - Backend API: http://localhost:8000
-   - API Docs: http://localhost:8000/docs
-
-4. **Comandos úteis:**
-   
-   **Usando Make:**
-   ```bash
-   make docker-up      # Inicia serviços
-   make docker-down    # Para serviços
-   make docker-logs    # Ver logs
-   make docker-ps      # Status dos containers
-   make docker-build   # Reconstruir imagens
-   make clean          # Limpar tudo (containers, volumes, imagens)
-   ```
-   
-   **Ou usando Docker Compose diretamente:**
-   ```bash
-   docker compose logs -f      # Ver logs
-   docker compose down         # Parar serviços
-   docker compose down -v      # Parar e remover volumes (apaga o banco)
-   docker compose build        # Reconstruir imagens
-   docker compose ps           # Status dos containers
-   ```
-
-> **Nota:** O backend aguarda o MySQL ficar saudável antes de iniciar e executa as migrations automaticamente na primeira inicialização.
-
----
-
-## 6. Deploy Manual / Produção (sem Docker)
-
-1. Configure as variáveis de ambiente (ou arquivos `.env`) tanto no backend quanto no frontend (usando os campos `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `OPENAI_API_KEY` e opcionalmente `DATABASE_URL`).
-2. **Backend**
-   ```bash
-   cd backend
-   alembic upgrade head      # cria o banco (se não existir), tabelas e já insere o Mario padrão via seed
-   uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
-   ```
-   > **Importante:** O sistema verifica automaticamente se o banco de dados existe ao iniciar. Se não existir, ele será criado automaticamente com charset `utf8mb4`. Você só precisa garantir que o usuário MySQL tenha permissões para criar bancos de dados.
-3. **Frontend**
-   ```bash
-   cd frontend
-   npm install
-   npm run build   # gera dist/
-   ```
-   Sirva os arquivos de `frontend/dist` com o web server de sua preferência (Nginx, Vercel, etc.).
-4. Opcional: configure um serviço (systemd/Docker) para manter o `uvicorn` rodando em produção.
-
-> Observações:
-> - **Criação automática do banco:** Tanto ao rodar `alembic upgrade head` quanto ao iniciar o servidor FastAPI, o sistema verifica se o banco de dados existe e o cria automaticamente se necessário.
-> - O seed garante que o personagem "Mario Bros" esteja disponível após o deploy.
-> - O backend impede que todos os personagens sejam removidos (sempre deve existir pelo menos um registro).
-
----
-
-## 7. Estrutura de diretórios
-
+```bash
+cp docker-compose.env.example .env
 ```
-backend/     # FastAPI + Alembic + models
-frontend/    # React + Vite
-app.py       # Chatbot via Streamlit
-main.py      # Chatbot via CLI
+
+Edite o arquivo `.env` e configure:
+- `OPENAI_API_KEY`: sua chave da OpenAI
+- `DB_PASSWORD`: senha do banco de dados
+- `MYSQL_ROOT_PASSWORD`: senha root do MySQL
+- `MODERATION_ENABLED`: habilitar moderação (true/false)
+- `MODERATION_LEVEL`: nível de moderação (strict/moderate/permissive)
+
+2. **Modo Desenvolvimento (com hot-reload):**
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+- Frontend: `http://localhost:5173` (Vite dev server)
+- Backend: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
+
+3. **Modo Produção:**
+
+```bash
+docker compose up -d
+```
+
+- Frontend: `http://localhost:8080` (Nginx)
+- Backend: `http://localhost:8000`
+- API Docs: `http://localhost:8000/docs`
+
+### Comandos Úteis
+
+**Usando Make:**
+```bash
+make docker-up      # Inicia serviços (produção)
+make docker-down    # Para serviços
+make docker-logs    # Ver logs
+make docker-ps      # Status dos containers
+make docker-build   # Reconstruir imagens
+make clean          # Limpar tudo (containers, volumes, imagens)
+```
+
+**Usando Docker Compose:**
+```bash
+# Produção
+docker compose up -d
+docker compose down
+docker compose logs -f
+
+# Desenvolvimento
+docker compose -f docker-compose.dev.yml up -d
+docker compose -f docker-compose.dev.yml down
+docker compose -f docker-compose.dev.yml logs -f
+
+# Reconstruir
+docker compose build
+docker compose -f docker-compose.dev.yml build frontend
 ```
 
 ---
 
-## Próximos passos sugeridos
-- Integrar o frontend com a escolha de personagem para o chatbot.
-- Adicionar autenticação no backend.
-- Salvar histórico de conversas amarrado a cada persona.
+## 🔒 Moderação de Conteúdo (Guardrails)
 
+O sistema inclui moderação automática de conteúdo usando:
+
+- **better-profanity**: Detecção de palavrões
+- **detoxify**: Detecção de toxicidade usando Machine Learning
+
+### Configuração
+
+Configure no arquivo `.env`:
+
+```env
+MODERATION_ENABLED=true
+MODERATION_LEVEL=moderate
+```
+
+### Níveis de Moderação
+
+- **strict**: Threshold 0.3 - Bloqueia conteúdo com baixa toxicidade
+- **moderate**: Threshold 0.5 - Recomendado para uso geral
+- **permissive**: Threshold 0.7 - Bloqueia apenas conteúdo extremamente tóxico
+
+### Funcionalidades
+
+- Moderação de entrada (mensagens do usuário)
+- Moderação de saída (respostas do assistente)
+- Whitelist de frases comuns para evitar falsos positivos
+- Ajuste automático de threshold para textos curtos
+
+---
+
+## 📱 Interface Web
+
+### Funcionalidades
+
+- **Gerenciamento de Personagens**:
+  - Criar, editar e excluir personagens
+  - Validação de formulários em tempo real
+  - Pré-visualização de imagens ao colar URL
+  - Campo "Contexto do prompt" obrigatório
+  - Botão para limpar formulário
+
+- **Chat Interativo**:
+  - Interface de chat em tempo real
+  - Seleção de personagem
+  - Histórico de conversa
+  - Indicador de digitação
+
+- **Layout Responsivo**:
+  - Otimizado para desktop e mobile
+  - Formulário deslizante no mobile
+  - Navegação fluida entre telas
+
+---
+
+## 🗄️ Estrutura do Banco de Dados
+
+O sistema usa MySQL com as seguintes tabelas:
+
+- **characters**: Armazena os personagens
+  - `id`: ID único
+  - `name`: Nome do personagem
+  - `description`: Descrição
+  - `catchphrase`: Frase característica
+  - `personality_traits`: Traços de personalidade (JSON)
+  - `image_url`: URL da imagem
+  - `system_prompt`: Prompt do sistema (obrigatório)
+  - `created_at`, `updated_at`: Timestamps
+
+---
+
+## 🔧 Variáveis de Ambiente
+
+### Backend (`backend/.env`)
+
+```env
+# Banco de Dados
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=mario_chat
+DB_USER=usuario
+DB_PASSWORD=senha
+
+# OpenAI
+OPENAI_API_KEY=sua-chave-aqui
+
+# Moderação
+MODERATION_ENABLED=true
+MODERATION_LEVEL=moderate
+```
+
+### Frontend (`frontend/.env`)
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+### Docker Compose (`.env`)
+
+```env
+# Banco de Dados
+DB_HOST=db
+DB_PORT=3306
+DB_NAME=mario_chat
+DB_USER=mario
+DB_PASSWORD=secret
+MYSQL_ROOT_PASSWORD=rootpassword
+
+# OpenAI
+OPENAI_API_KEY=sua-chave-aqui
+
+# Frontend
+VITE_API_URL=http://localhost:8000
+
+# Moderação
+MODERATION_ENABLED=true
+MODERATION_LEVEL=moderate
+```
+
+---
+
+## 📚 API Endpoints
+
+### Personagens
+
+- `GET /api/characters` - Lista todos os personagens
+- `GET /api/characters/{id}` - Obtém um personagem
+- `POST /api/characters` - Cria um personagem
+- `PUT /api/characters/{id}` - Atualiza um personagem
+- `DELETE /api/characters/{id}` - Remove um personagem
+
+### Chat
+
+- `POST /api/chat` - Envia mensagem e recebe resposta do personagem
+
+Consulte `http://localhost:8000/docs` para documentação interativa completa.
+
+---
+
+## 🧪 Desenvolvimento
+
+### Backend
+
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+### Com Docker (Desenvolvimento)
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+O frontend terá hot-reload automático na porta 5173.
+
+---
+
+## 📦 Dependências Principais
+
+### Backend
+- FastAPI: Framework web
+- SQLAlchemy: ORM
+- Alembic: Migrations
+- OpenAI: API de chat
+- better-profanity: Detecção de palavrões
+- detoxify: Detecção de toxicidade
+- PyMySQL: Driver MySQL
+
+### Frontend
+- React: Framework UI
+- TypeScript: Tipagem estática
+- Vite: Build tool
+- React Hook Form: Gerenciamento de formulários
+- Zod: Validação de schemas
+- TanStack Query: Gerenciamento de estado servidor
+
+---
+
+## 🚀 Deploy Manual (sem Docker)
+
+### Backend
+
+```bash
+cd backend
+alembic upgrade head
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run build
+# Sirva os arquivos de frontend/dist/ com Nginx ou outro servidor web
+```
+
+---
+
+## 📝 Notas Importantes
+
+- O sistema cria automaticamente o banco de dados se não existir
+- O seed inicial cria o personagem "Mario Bros" automaticamente
+- O sistema impede que todos os personagens sejam removidos (sempre deve existir pelo menos um)
+- O campo "Contexto do prompt" é obrigatório para todos os personagens
+- A moderação de conteúdo pode ser desabilitada configurando `MODERATION_ENABLED=false`
+
+---
+
+## 🔮 Próximos Passos Sugeridos
+
+- [ ] Autenticação e autorização
+- [ ] Histórico de conversas persistente
+- [ ] Exportação/importação de personagens
+- [ ] Temas personalizáveis
+- [ ] Suporte a múltiplos idiomas
+- [ ] Integração com outros modelos de IA
+
+---
+
+## 📄 Licença
+
+Este projeto é de código aberto e está disponível sob a licença MIT.
