@@ -24,7 +24,7 @@ README.md
 *.test.tsx
 *.spec.ts
 *.spec.tsx
-tsconfig*.json
+# tsconfig*.json - NÃO excluir, necessário para o build
 eslint.config.js
 
 
