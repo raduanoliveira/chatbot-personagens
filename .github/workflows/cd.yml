@@ -20,42 +20,46 @@ jobs:
         uses: docker/setup-buildx-action@v3
       
       - name: Login to Docker Hub
-        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+        if: ${{ secrets.DOCKER_USERNAME != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       
       - name: Build and push backend image
+        if: ${{ secrets.DOCKER_USERNAME != '' }}
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           file: ./backend/Dockerfile
-          push: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+          push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:latest
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          platforms: linux/amd64
       
       - name: Build and push frontend image
+        if: ${{ secrets.DOCKER_USERNAME != '' }}
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          push: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+          push: true
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:latest
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:${{ github.sha }}
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          platforms: linux/amd64
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL || 'http://localhost:8000' }}
       
       - name: Summary
-        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+        if: ${{ secrets.DOCKER_USERNAME != '' }}
         run: |
           echo "## 🐳 Imagens Docker Publicadas" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
