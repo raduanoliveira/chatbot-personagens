@@ -8,7 +8,9 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 BASE_DIR = Path(__file__).resolve().parents[1]
-sys.path.append(str(BASE_DIR))
+# Garante que o diretório de trabalho está no PYTHONPATH (prioridade máxima)
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 from app.core.config import settings  # noqa: E402
 from app.models.base import Base  # noqa: E402
