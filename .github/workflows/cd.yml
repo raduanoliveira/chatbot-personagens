@@ -19,8 +19,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
-      - name: Login to Docker Hub (optional)
-        if: ${{ secrets.DOCKER_USERNAME }}
+      - name: Login to Docker Hub
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -31,10 +31,11 @@ jobs:
         with:
           context: ./backend
           file: ./backend/Dockerfile
-          push: ${{ secrets.DOCKER_USERNAME != '' }}
+          push: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:latest
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
       
@@ -43,14 +44,30 @@ jobs:
         with:
           context: ./frontend
           file: ./frontend/Dockerfile
-          push: ${{ secrets.DOCKER_USERNAME != '' }}
+          push: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:latest
             ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=${{ secrets.VITE_API_URL || 'http://localhost:8000' }}
+      
+      - name: Summary
+        if: ${{ secrets.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
+        run: |
+          echo "## 🐳 Imagens Docker Publicadas" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Backend" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Frontend" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:latest\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [Ver no Docker Hub](https://hub.docker.com/r/${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend)" >> $GITHUB_STEP_SUMMARY
       
       # Adicione aqui seus passos de deploy (ex: SSH, Kubernetes, etc.)
       # - name: Deploy to server

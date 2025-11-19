@@ -39,29 +39,42 @@ git branch -M main
 git push -u origin main
 ```
 
-### 3. Configurar Secrets (Opcional - apenas para CD)
+### 3. Configurar Secrets para Docker Hub
 
-Se quiser publicar imagens Docker automaticamente:
+Para publicar imagens Docker automaticamente no Docker Hub:
 
-1. No GitHub, vá para seu repositório
-2. Clique em **Settings** (Configurações)
-3. No menu lateral, clique em **Secrets and variables** > **Actions**
-4. Clique em **New repository secret**
-5. Adicione os seguintes secrets:
+#### Passo 1: Criar Access Token no Docker Hub
+
+1. Acesse [Docker Hub](https://hub.docker.com/) e faça login
+2. Clique no seu perfil (canto superior direito) > **Account Settings**
+3. Vá em **Security** (no menu lateral)
+4. Clique em **New Access Token**
+5. Preencha:
+   - **Description**: `github-actions` (ou qualquer nome)
+   - **Access permissions**: Selecione **Read & Write**
+6. Clique em **Generate**
+7. **IMPORTANTE**: Copie o token agora (você só verá uma vez!)
+   - Exemplo: `dckr_pat_xxxxxxxxxxxxxxxxxxxx`
+
+#### Passo 2: Configurar Secrets no GitHub
+
+1. No seu repositório GitHub, vá em **Settings**
+2. No menu lateral: **Secrets and variables** > **Actions**
+3. Clique em **New repository secret**
+4. Adicione os seguintes secrets:
 
    **DOCKER_USERNAME**
    - Name: `DOCKER_USERNAME`
-   - Secret: Seu usuário do Docker Hub
+   - Secret: Seu usuário do Docker Hub (ex: `raduanoliveira`)
 
    **DOCKER_PASSWORD**
    - Name: `DOCKER_PASSWORD`
-   - Secret: Sua senha ou token do Docker Hub
-   - 💡 **Dica**: Use um token de acesso ao invés da senha (mais seguro)
-     - Vá em Docker Hub > Account Settings > Security > New Access Token
+   - Secret: O token de acesso que você criou (não use a senha!)
 
    **VITE_API_URL** (opcional)
    - Name: `VITE_API_URL`
    - Secret: URL da sua API em produção (ex: `https://api.seudominio.com`)
+   - Se não configurar, usará `http://localhost:8000` como padrão
 
 ### 4. Verificar os Workflows
 
@@ -87,6 +100,30 @@ Os workflows já estão configurados em `.github/workflows/`:
 
 - ✅ **Verde**: Tudo passou
 - ❌ **Vermelho**: Algum erro (clique para ver detalhes)
+
+### 7. Verificar Imagens no Docker Hub
+
+Após o workflow de CD executar com sucesso:
+
+1. **Acesse o Docker Hub**:
+   - Backend: `https://hub.docker.com/r/SEU_USUARIO/chatpersonagens-backend`
+   - Frontend: `https://hub.docker.com/r/SEU_USUARIO/chatpersonagens-frontend`
+   - Substitua `SEU_USUARIO` pelo seu usuário do Docker Hub
+
+2. **Tags disponíveis**:
+   - `latest`: Sempre a última versão da branch `main`
+   - `{commit-sha}`: Versão específica de um commit
+   - `{tag}`: Se você criar uma tag (ex: `v1.0.0`)
+
+3. **Usar as imagens**:
+   ```bash
+   # Pull das imagens
+   docker pull SEU_USUARIO/chatpersonagens-backend:latest
+   docker pull SEU_USUARIO/chatpersonagens-frontend:latest
+   
+   # Ou use no docker-compose.yml
+   # Substitua as imagens locais pelas do Docker Hub
+   ```
 
 ## 📊 O que os Workflows Fazem
 
