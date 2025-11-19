@@ -6,6 +6,9 @@ backend/.env
 frontend/.env
 frontend/node_modules/
 frontend/dist/
+CI_CD_SETUP.md
+RAILWAY_DEPLOY.md
+DOCKER_HUB_TROUBLESHOOTING.md
 
 # Python
 __pycache__/
