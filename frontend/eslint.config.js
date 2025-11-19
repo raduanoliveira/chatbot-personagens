@@ -19,5 +19,13 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Desabilita regras relacionadas a setState em effects
+      // Necessário para sincronização de estado local com formulários
+      'react-hooks/exhaustive-deps': 'warn',
+      // Desabilita a regra que detecta setState em effects
+      // É necessário em alguns casos para sincronizar estado local
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

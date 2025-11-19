@@ -66,9 +66,11 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
                 image_url: imageUrlValue,
                 system_prompt: selected.system_prompt ?? "",
             });
+            // Necessário sincronizar estado local com o formulário
             setImageUrl(imageUrlValue);
         } else {
             reset(defaultValues);
+            // Necessário limpar estado local ao resetar formulário
             setImageUrl("");
         }
     }, [selected, reset]);
@@ -114,6 +116,7 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
         
         // Se não há URL, limpa tudo
         if (!url) {
+            // Necessário limpar estados de preview quando URL é removida
             setImagePreview(null);
             setImageError(false);
             setImageLoading(false);
