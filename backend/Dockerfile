@@ -41,6 +41,9 @@ COPY --from=builder /root/.local /root/.local
 # Garante que o Python encontre os pacotes instalados
 ENV PATH=/root/.local/bin:$PATH
 
+# Configura PYTHONPATH para incluir o diretório de trabalho
+ENV PYTHONPATH=/app
+
 # Copia apenas o código da aplicação (não requirements.txt)
 COPY . .
 
