@@ -14,7 +14,7 @@ Sistema completo de chatbot com gerenciamento de personagens, interface web mode
 - **Validação de Formulários**: Validação completa com feedback visual
 
 ---
-#CICD
+
 ## 📋 Pré-requisitos
 
 - Python 3.12+
