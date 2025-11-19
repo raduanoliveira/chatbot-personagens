@@ -1,5 +1,7 @@
 # Chatbot Personagens 💬
 
+[![CI](https://github.com/SEU_USUARIO/chatbot-personagens/actions/workflows/ci.yml/badge.svg)](https://github.com/SEU_USUARIO/chatbot-personagens/actions/workflows/ci.yml)
+
 Sistema completo de chatbot com gerenciamento de personagens, interface web moderna e moderação de conteúdo integrada.
 
 ## 🚀 Funcionalidades
@@ -434,6 +436,20 @@ npm run build
 
 ---
 
+## 🔄 CI/CD
+
+O projeto possui CI/CD configurado com GitHub Actions:
+
+- **CI**: Executa automaticamente em cada push/PR
+  - Lint e build do frontend
+  - Verificação do backend
+  - Build de imagens Docker
+
+- **CD**: Executa em push para `main` ou tags
+  - Publica imagens Docker (se configurado)
+
+📖 **Veja o guia completo**: [CI_CD_SETUP.md](./CI_CD_SETUP.md)
+
 ## 🔮 Próximos Passos Sugeridos
 
 - [ ] Autenticação e autorização
@@ -442,6 +458,7 @@ npm run build
 - [ ] Temas personalizáveis
 - [ ] Suporte a múltiplos idiomas
 - [ ] Integração com outros modelos de IA
+- [ ] Testes automatizados
 
 ---
 

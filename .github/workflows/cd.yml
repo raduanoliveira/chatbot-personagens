@@ -1,0 +1,59 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub (optional)
+        if: ${{ secrets.DOCKER_USERNAME }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: ${{ secrets.DOCKER_USERNAME != '' }}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:latest
+            ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-backend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: ${{ secrets.DOCKER_USERNAME != '' }}
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:latest
+            ${{ secrets.DOCKER_USERNAME }}/chatpersonagens-frontend:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=${{ secrets.VITE_API_URL || 'http://localhost:8000' }}
+      
+      # Adicione aqui seus passos de deploy (ex: SSH, Kubernetes, etc.)
+      # - name: Deploy to server
+      #   run: |
+      #     echo "Add your deployment steps here"
+
