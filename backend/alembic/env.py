@@ -12,6 +12,17 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
+# Verifica se o módulo app existe antes de importar
+import os
+if not os.path.exists(os.path.join(BASE_DIR, "app")):
+    raise RuntimeError(f"Diretório 'app' não encontrado em {BASE_DIR}")
+if not os.path.exists(os.path.join(BASE_DIR, "app", "core")):
+    raise RuntimeError(f"Diretório 'app/core' não encontrado em {BASE_DIR}")
+if not os.path.exists(os.path.join(BASE_DIR, "app", "core", "__init__.py")):
+    raise RuntimeError(f"Arquivo 'app/core/__init__.py' não encontrado em {BASE_DIR}")
+if not os.path.exists(os.path.join(BASE_DIR, "app", "core", "config.py")):
+    raise RuntimeError(f"Arquivo 'app/core/config.py' não encontrado em {BASE_DIR}")
+
 from app.core.config import settings  # noqa: E402
 from app.models.base import Base  # noqa: E402
 from app import models  # noqa: F401, E402
