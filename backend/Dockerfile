@@ -47,6 +47,11 @@ ENV PYTHONPATH=/app
 # Copia apenas o código da aplicação (não requirements.txt)
 COPY . .
 
+# Verifica se os arquivos críticos foram copiados (para debug)
+RUN ls -la app/core/ || echo "ERRO: app/core não encontrado" && exit 1
+RUN test -f app/core/__init__.py || (echo "ERRO: app/core/__init__.py não encontrado" && exit 1)
+RUN test -f app/core/config.py || (echo "ERRO: app/core/config.py não encontrado" && exit 1)
+
 # Expõe a porta
 EXPOSE 8000
 
