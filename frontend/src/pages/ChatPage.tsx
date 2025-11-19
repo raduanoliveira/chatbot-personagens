@@ -231,14 +231,20 @@ export function ChatPage({ onNavigateToCharacters }: ChatPageProps) {
                     <div ref={messagesEndRef} />
                 </div>
 
-                <div className="chat-input-container">
+                <form 
+                    className="chat-input-container"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSendMessage();
+                    }}
+                >
                     <input
                         type="text"
                         className="chat-input"
                         placeholder="Digite sua mensagem..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        onKeyPress={(e) => {
+                        onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
                                 e.preventDefault();
                                 handleSendMessage();
@@ -247,13 +253,13 @@ export function ChatPage({ onNavigateToCharacters }: ChatPageProps) {
                         disabled={isLoading || !selectedCharacterId}
                     />
                     <button
+                        type="submit"
                         className="btn btn--send"
-                        onClick={handleSendMessage}
                         disabled={isLoading || !message.trim() || !selectedCharacterId}
                     >
                         Enviar
                     </button>
-                </div>
+                </form>
             </div>
         </div>
     );

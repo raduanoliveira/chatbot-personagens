@@ -12,5 +12,19 @@ pnpm-debug.log*
 .DS_Store
 coverage
 .nyc_output
+.git
+.gitignore
+*.md
+README.md
+.vscode
+.idea
+*.swp
+*.swo
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+tsconfig*.json
+eslint.config.js
 
 

@@ -105,17 +105,45 @@ Os workflows já estão configurados em `.github/workflows/`:
 
 Após o workflow de CD executar com sucesso:
 
-1. **Acesse o Docker Hub**:
+1. **Verifique se o workflow executou**:
+   - No GitHub, vá em **Actions**
+   - Procure pelo workflow "CD"
+   - Clique no último workflow executado
+   - Verifique se todos os steps passaram (✅ verde)
+
+2. **Se o workflow falhou, verifique**:
+   - Os secrets `DOCKER_USERNAME` e `DOCKER_PASSWORD` estão configurados?
+   - O token do Docker Hub tem permissão "Read & Write"?
+   - Os logs do workflow mostram algum erro?
+
+3. **Acesse o Docker Hub**:
    - Backend: `https://hub.docker.com/r/SEU_USUARIO/chatpersonagens-backend`
    - Frontend: `https://hub.docker.com/r/SEU_USUARIO/chatpersonagens-frontend`
    - Substitua `SEU_USUARIO` pelo seu usuário do Docker Hub
+   - **Nota**: Se não aparecer, o repositório pode estar privado ou as imagens ainda não foram publicadas
 
-2. **Tags disponíveis**:
+4. **Troubleshooting - Imagens não aparecem**:
+   
+   **Problema**: "Page not found" no Docker Hub
+   
+   **Soluções**:
+   - Verifique se o workflow de CD executou (Actions > CD)
+   - Verifique os logs do step "Build and push backend image"
+   - Confirme que `DOCKER_USERNAME` está correto (case-sensitive)
+   - Verifique se o token tem permissão "Read & Write"
+   - Tente fazer push manualmente para testar:
+     ```bash
+     docker login -u SEU_USUARIO
+     docker tag chatpersonagens-backend:latest SEU_USUARIO/chatpersonagens-backend:test
+     docker push SEU_USUARIO/chatpersonagens-backend:test
+     ```
+
+5. **Tags disponíveis** (após publicação):
    - `latest`: Sempre a última versão da branch `main`
    - `{commit-sha}`: Versão específica de um commit
-   - `{tag}`: Se você criar uma tag (ex: `v1.0.0`)
+   - `{branch-name}`: Nome da branch
 
-3. **Usar as imagens**:
+6. **Usar as imagens**:
    ```bash
    # Pull das imagens
    docker pull SEU_USUARIO/chatpersonagens-backend:latest

@@ -16,5 +16,18 @@ alembic/versions/*.pyc
 .pytest_cache
 .coverage
 htmlcov/
+.git
+.gitignore
+*.md
+README.md
+.vscode
+.idea
+*.swp
+*.swo
+*.test.py
+*.spec.py
+tests/
+test_*.py
+*_test.py
 
 
