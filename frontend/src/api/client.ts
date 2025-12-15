@@ -9,7 +9,7 @@ const api = axios.create({
     headers: {
         "Content-Type": "application/json",
     },
-    timeout: 30000, // 30 segundos de timeout (aumentado para requisições mais lentas)
+    timeout: 120000, // 120 segundos (2 minutos) - necessário para requisições da OpenAI que podem demorar
 });
 
 // Interceptor para log de requisições e erros
@@ -49,7 +49,12 @@ api.interceptors.response.use(
         console.error("❌ Erro na API:", errorInfo);
         
         // Diagnóstico de erros comuns
-        if (error.message === "Network Error" || !error.response) {
+        if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+            console.error("🔴 Timeout - A requisição demorou muito para responder:");
+            console.error("   Isso é normal para requisições da OpenAI que podem demorar até 2 minutos");
+            console.error("   O timeout foi aumentado para 120 segundos");
+            console.error("   Se o problema persistir, verifique os logs do backend");
+        } else if (error.message === "Network Error" || !error.response) {
             console.error("🔴 Network Error - Possíveis causas:");
             console.error("   1. Backend não está acessível ou offline");
             console.error("   2. Problema de CORS (verifique ALLOWED_ORIGINS no backend)");
