@@ -19,6 +19,13 @@ ENV VITE_API_URL=$VITE_API_URL
 # Build da aplicação
 RUN npm run build
 
+# Debug: mostra a URL da API que foi usada no build
+RUN echo "🔍 VITE_API_URL usado no build: $VITE_API_URL" && \
+    echo "📁 Verificando arquivos buildados..." && \
+    ls -la /app/dist && \
+    echo "📄 Verificando se a URL está no código..." && \
+    grep -r "VITE_API_URL\|localhost:7000\|localhost:8000" /app/dist || echo "⚠️  URL não encontrada nos arquivos buildados"
+
 # Limpa cache e node_modules para reduzir tamanho
 RUN rm -rf node_modules package*.json .npm
 
