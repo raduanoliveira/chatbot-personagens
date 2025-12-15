@@ -12,9 +12,12 @@ RUN npm ci --no-audit --no-fund
 # Copia código fonte
 COPY . .
 
-# ARG para variáveis de build
+# ARG para variáveis de build (com fallback)
 ARG VITE_API_URL=http://localhost:7000
-ENV VITE_API_URL=$VITE_API_URL
+# Railway passa variáveis de ambiente automaticamente, mas vamos garantir que está disponível
+ENV VITE_API_URL=${VITE_API_URL}
+# Log para debug
+RUN echo "🔍 VITE_API_URL recebido: $VITE_API_URL"
 
 # Build da aplicação
 RUN npm run build
