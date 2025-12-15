@@ -13,11 +13,18 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 
 # ARG para variáveis de build (com fallback)
+# Railway passa variáveis de ambiente automaticamente como build args
 ARG VITE_API_URL=http://localhost:7000
-# Railway passa variáveis de ambiente automaticamente, mas vamos garantir que está disponível
+# Usa a variável de ambiente se disponível, senão usa o ARG
 ENV VITE_API_URL=${VITE_API_URL}
-# Log para debug
-RUN echo "🔍 VITE_API_URL recebido: $VITE_API_URL"
+# Log para debug - mostra o valor que será usado no build
+RUN echo "🔍 VITE_API_URL que será usado no build: $VITE_API_URL" && \
+    if [ "$VITE_API_URL" = "http://localhost:7000" ]; then \
+        echo "⚠️  AVISO: VITE_API_URL não foi passado como build arg! Usando valor padrão."; \
+        echo "   Certifique-se de que VITE_API_URL está configurado no Railway."; \
+    else \
+        echo "✅ VITE_API_URL configurado corretamente: $VITE_API_URL"; \
+    fi
 
 # Build da aplicação
 RUN npm run build
