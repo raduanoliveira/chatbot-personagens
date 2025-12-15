@@ -1,5 +1,6 @@
 # Arquivos de configuração com informações sensíveis
-config.py
+# Ignora apenas config.py na raiz (para clientes antigos), não o backend/app/core/config.py
+/config.py
 .env
 .env.local
 backend/.env
