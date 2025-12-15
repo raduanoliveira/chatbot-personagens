@@ -11,7 +11,8 @@ export interface ChatResponse {
 }
 
 export const sendChatMessage = async (payload: ChatRequest): Promise<ChatResponse> => {
-    const { data } = await api.post<ChatResponse>("/api/chat", payload);
+    // Usa /api/chat/ com barra no final para consistência com o backend
+    const { data } = await api.post<ChatResponse>("/api/chat/", payload);
     return data;
 };
 
