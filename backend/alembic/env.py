@@ -63,6 +63,7 @@ from app import models  # noqa: F401, E402
 def ensure_database_exists():
     """
     Verifica se o banco de dados existe e cria se não existir.
+    Não falha se o MySQL não estiver disponível - apenas loga o erro.
     """
     try:
         # Conecta ao MySQL sem especificar o banco de dados
@@ -71,7 +72,8 @@ def ensure_database_exists():
             port=settings.db_port,
             user=settings.db_user,
             password=settings.db_password,
-            charset='utf8mb4'
+            charset='utf8mb4',
+            connect_timeout=5  # Timeout de 5 segundos
         )
         
         with connection.cursor() as cursor:
@@ -92,11 +94,16 @@ def ensure_database_exists():
         
         connection.close()
     except Exception as e:
-        print(f"⚠️  Erro ao verificar/criar banco de dados: {e}")
-        raise
+        # Não faz raise - apenas loga o erro
+        # O Alembic tentará conectar novamente quando executar as migrations
+        print(f"⚠️  Aviso: Não foi possível verificar/criar banco de dados agora: {e}")
+        print(f"   Isso é normal se o MySQL ainda não estiver disponível.")
+        print(f"   Tentando conectar em: {settings.db_host}:{settings.db_port}")
+        print(f"   As migrations serão executadas quando o banco estiver disponível.")
 
 
-# Garante que o banco existe antes de rodar migrations
+# Tenta garantir que o banco existe antes de rodar migrations
+# Mas não falha se não conseguir - o Alembic tentará novamente
 ensure_database_exists()
 
 # this is the Alembic Config object, which provides
