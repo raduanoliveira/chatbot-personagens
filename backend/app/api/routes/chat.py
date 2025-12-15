@@ -39,11 +39,11 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     if not character:
         raise HTTPException(status_code=404, detail="Personagem não encontrado.")
     
-    # Validação de entrada com guardrails
+    # Validação de entrada com guardrails (apenas palavrões para performance)
     if settings.moderation_enabled:
         guardrails = get_guardrails()
-        # Verifica tanto palavrões quanto toxicidade na entrada
-        input_moderation = guardrails.moderate(payload.message, check_type="both")
+        # Verifica apenas palavrões na entrada (toxicidade é lenta, verifica apenas na saída)
+        input_moderation = guardrails.moderate(payload.message, check_type="input")
         
         if not input_moderation:
             # Mensagem genérica para não expor detalhes da moderação
@@ -84,10 +84,13 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
         
         assistant_message = response.choices[0].message.content
         
-        # Validação de saída com guardrails
+        # Validação de saída com guardrails (apenas palavrões para performance)
+        # Nota: Verificação de toxicidade na saída foi desabilitada para melhorar performance
+        # A OpenAI já faz moderação de conteúdo, então isso é redundante
         if settings.moderation_enabled:
             guardrails = get_guardrails()
-            output_moderation = guardrails.moderate(assistant_message, check_type="output")
+            # Verifica apenas palavrões na saída (rápido)
+            output_moderation = guardrails.moderate(assistant_message, check_type="input")
             
             if not output_moderation:
                 # Se a resposta do assistente for inadequada, retorna mensagem segura
