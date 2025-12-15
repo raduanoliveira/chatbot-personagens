@@ -48,13 +48,24 @@ api.interceptors.response.use(
         };
         console.error("❌ Erro na API:", errorInfo);
         
-        // Se for 502, adiciona informação extra
-        if (error.response?.status === 502) {
+        // Diagnóstico de erros comuns
+        if (error.message === "Network Error" || !error.response) {
+            console.error("🔴 Network Error - Possíveis causas:");
+            console.error("   1. Backend não está acessível ou offline");
+            console.error("   2. Problema de CORS (verifique ALLOWED_ORIGINS no backend)");
+            console.error("   3. Timeout na requisição");
+            console.error("   4. Problema de conectividade");
+            console.error("   Teste a URL diretamente no navegador:", `${apiUrl}/health`);
+            console.error("   Verifique se ALLOWED_ORIGINS inclui:", window.location.origin);
+        } else if (error.response?.status === 502) {
             console.error("🔴 Erro 502 Bad Gateway - Possíveis causas:");
             console.error("   1. Backend não está acessível na URL:", apiUrl);
             console.error("   2. Problema de CORS (verifique ALLOWED_ORIGINS no backend)");
             console.error("   3. Backend está retornando erro 502");
             console.error("   Teste a URL diretamente:", `${apiUrl}/health`);
+        } else if (error.response?.status === 0 || error.code === "ERR_NETWORK") {
+            console.error("🔴 Erro de rede - Backend não está respondendo");
+            console.error("   Verifique se o backend está rodando e acessível");
         }
         
         return Promise.reject(error);
