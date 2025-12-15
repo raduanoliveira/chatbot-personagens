@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -21,6 +21,8 @@ class ChatMessage(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+    # Debug: informações de performance (apenas em desenvolvimento)
+    debug_performance: Optional[dict] = None
 
 
 def get_openai_client():
@@ -40,13 +42,15 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     
     logger = logging.getLogger(__name__)
     start_time = time.time()
+    perf_data = {}  # Armazena tempos de cada etapa
     
     # Busca personagem
     step_start = time.time()
     character = db.get(Character, payload.character_id)
     if not character:
         raise HTTPException(status_code=404, detail="Personagem não encontrado.")
-    logger.info(f"⏱️  [PERF] Buscar personagem: {(time.time() - step_start)*1000:.2f}ms")
+    perf_data["buscar_personagem_ms"] = round((time.time() - step_start) * 1000, 2)
+    logger.info(f"⏱️  [PERF] Buscar personagem: {perf_data['buscar_personagem_ms']}ms")
     
     # Validação de entrada com guardrails (apenas palavrões para performance)
     step_start = time.time()
@@ -54,7 +58,8 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
         guardrails = get_guardrails()
         # Verifica apenas palavrões na entrada (toxicidade é lenta, verifica apenas na saída)
         input_moderation = guardrails.moderate(payload.message, check_type="input")
-        logger.info(f"⏱️  [PERF] Moderação entrada: {(time.time() - step_start)*1000:.2f}ms")
+        perf_data["moderacao_entrada_ms"] = round((time.time() - step_start) * 1000, 2)
+        logger.info(f"⏱️  [PERF] Moderação entrada: {perf_data['moderacao_entrada_ms']}ms")
         
         if not input_moderation:
             # Mensagem genérica para não expor detalhes da moderação
@@ -70,14 +75,16 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
                     "Vamos manter nossa aventura divertida e respeitosa! It's-a me, Mario! 🍄"
                 )
             
-            return ChatResponse(response=safe_response)
+            return ChatResponse(response=safe_response, debug_performance=perf_data)
     else:
-        logger.info(f"⏱️  [PERF] Moderação desabilitada: {(time.time() - step_start)*1000:.2f}ms")
+        perf_data["moderacao_entrada_ms"] = 0
+        logger.info(f"⏱️  [PERF] Moderação desabilitada")
     
     # Prepara cliente OpenAI
     step_start = time.time()
     client = get_openai_client()
-    logger.info(f"⏱️  [PERF] Criar cliente OpenAI: {(time.time() - step_start)*1000:.2f}ms")
+    perf_data["criar_cliente_openai_ms"] = round((time.time() - step_start) * 1000, 2)
+    logger.info(f"⏱️  [PERF] Criar cliente OpenAI: {perf_data['criar_cliente_openai_ms']}ms")
     
     # Monta o histórico de mensagens
     step_start = time.time()
@@ -90,7 +97,8 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     
     # Adiciona a mensagem atual do usuário
     messages.append({"role": "user", "content": payload.message})
-    logger.info(f"⏱️  [PERF] Preparar mensagens: {(time.time() - step_start)*1000:.2f}ms")
+    perf_data["preparar_mensagens_ms"] = round((time.time() - step_start) * 1000, 2)
+    logger.info(f"⏱️  [PERF] Preparar mensagens: {perf_data['preparar_mensagens_ms']}ms")
     
     try:
         # Chama OpenAI
@@ -103,7 +111,9 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
             max_tokens=2000  # Aumentado para permitir respostas mais completas
         )
         openai_time = (time.time() - step_start) * 1000
-        logger.info(f"⏱️  [PERF] OpenAI respondeu: {openai_time:.2f}ms ({openai_time/1000:.2f}s)")
+        perf_data["openai_ms"] = round(openai_time, 2)
+        perf_data["openai_s"] = round(openai_time / 1000, 2)
+        logger.info(f"⏱️  [PERF] OpenAI respondeu: {perf_data['openai_ms']}ms ({perf_data['openai_s']}s)")
         
         assistant_message = response.choices[0].message.content
         
@@ -115,7 +125,8 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
             guardrails = get_guardrails()
             # Verifica apenas palavrões na saída (rápido)
             output_moderation = guardrails.moderate(assistant_message, check_type="input")
-            logger.info(f"⏱️  [PERF] Moderação saída: {(time.time() - step_start)*1000:.2f}ms")
+            perf_data["moderacao_saida_ms"] = round((time.time() - step_start) * 1000, 2)
+            logger.info(f"⏱️  [PERF] Moderação saída: {perf_data['moderacao_saida_ms']}ms")
             
             if not output_moderation:
                 # Se a resposta do assistente for inadequada, retorna mensagem segura
@@ -131,14 +142,19 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
                         "Vamos falar de algo mais divertido! It's-a me, Mario! 🍄"
                     )
                 
-                return ChatResponse(response=safe_response)
+                perf_data["total_ms"] = round((time.time() - start_time) * 1000, 2)
+                perf_data["total_s"] = round(perf_data["total_ms"] / 1000, 2)
+                return ChatResponse(response=safe_response, debug_performance=perf_data)
         else:
-            logger.info(f"⏱️  [PERF] Moderação saída desabilitada: {(time.time() - step_start)*1000:.2f}ms")
+            perf_data["moderacao_saida_ms"] = 0
+            logger.info(f"⏱️  [PERF] Moderação saída desabilitada")
         
         total_time = (time.time() - start_time) * 1000
-        logger.info(f"⏱️  [PERF] Total: {total_time:.2f}ms ({total_time/1000:.2f}s)")
+        perf_data["total_ms"] = round(total_time, 2)
+        perf_data["total_s"] = round(total_time / 1000, 2)
+        logger.info(f"⏱️  [PERF] Total: {perf_data['total_ms']}ms ({perf_data['total_s']}s)")
         
-        return ChatResponse(response=assistant_message)
+        return ChatResponse(response=assistant_message, debug_performance=perf_data)
     
     except Exception as e:
         import logging
