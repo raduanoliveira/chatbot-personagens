@@ -220,28 +220,30 @@ class Guardrails:
         if thresholds['block_profanity'] and check_type in ["input", "both"]:
             has_profanity, profanity_reason = self._check_profanity(text)
         
-        # Verificação de toxicidade (aplica para output e both)
+        # Verificação de toxicidade (APENAS para output - desabilitada para input por performance)
         is_toxic = False
         toxicity_score = None
         
-        if thresholds['require_toxicity_check']:
-            # Para input, verifica toxicidade também (pode detectar intenção tóxica)
+        # IMPORTANTE: Verificação de toxicidade é MUITO LENTA (modelo ML)
+        # Desabilitada para input para melhorar performance
+        # Apenas verifica toxicidade na saída (resposta do assistente)
+        if thresholds['require_toxicity_check'] and check_type in ["output", "both"]:
+            # Para input, NÃO verifica toxicidade (muito lento)
             # Para output, verifica toxicidade na resposta do assistente
-            if check_type in ["input", "output", "both"]:
-                _, toxicity_score = self._check_toxicity(text)
+            _, toxicity_score = self._check_toxicity(text)
+            
+            if toxicity_score is not None:
+                # Ajusta threshold para textos curtos (são mais propensos a falsos positivos)
+                adjusted_threshold = thresholds['toxicity_threshold']
+                if len(text_lower) < 20:
+                    # Aumenta o threshold em 20% para textos curtos
+                    adjusted_threshold = adjusted_threshold * 1.2
                 
-                if toxicity_score is not None:
-                    # Ajusta threshold para textos curtos (são mais propensos a falsos positivos)
-                    adjusted_threshold = thresholds['toxicity_threshold']
-                    if len(text_lower) < 20:
-                        # Aumenta o threshold em 20% para textos curtos
-                        adjusted_threshold = adjusted_threshold * 1.2
-                    
-                    is_toxic = toxicity_score > adjusted_threshold
-                    
-                    # Log para debug (pode ser removido depois)
-                    if is_toxic:
-                        logger.debug(f"Texto bloqueado: '{text[:50]}...' | Score: {toxicity_score:.3f} | Threshold: {adjusted_threshold:.3f}")
+                is_toxic = toxicity_score > adjusted_threshold
+                
+                # Log para debug (pode ser removido depois)
+                if is_toxic:
+                    logger.debug(f"Texto bloqueado: '{text[:50]}...' | Score: {toxicity_score:.3f} | Threshold: {adjusted_threshold:.3f}")
         
         # Determina se o conteúdo é seguro
         is_safe = not has_profanity and not is_toxic
