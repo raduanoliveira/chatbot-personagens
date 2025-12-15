@@ -74,20 +74,24 @@ export function ChatPage({ onNavigateToCharacters }: ChatPageProps) {
                 ...newConversation,
                 { role: "assistant" as const, content: response.response },
             ]);
-        } catch (error: any) {
+        } catch (error) {
             console.error("Erro ao enviar mensagem:", error);
             
             // Extrai mensagem de erro mais detalhada
             let errorMessage = "❌ Erro ao processar sua mensagem. Tente novamente.";
             
-            if (error?.response?.data?.detail) {
-                // Erro do backend com detalhes
-                errorMessage = `❌ Erro: ${error.response.data.detail}`;
-            } else if (error?.response?.status === 500) {
-                errorMessage = "❌ Erro interno do servidor. Verifique os logs do backend.";
-            } else if (error?.response?.status === 404) {
-                errorMessage = "❌ Personagem não encontrado.";
-            } else if (error?.message) {
+            // Verifica se é um erro do axios
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number; data?: { detail?: string } } };
+                if (axiosError.response?.data?.detail) {
+                    // Erro do backend com detalhes
+                    errorMessage = `❌ Erro: ${axiosError.response.data.detail}`;
+                } else if (axiosError.response?.status === 500) {
+                    errorMessage = "❌ Erro interno do servidor. Verifique os logs do backend.";
+                } else if (axiosError.response?.status === 404) {
+                    errorMessage = "❌ Personagem não encontrado.";
+                }
+            } else if (error instanceof Error) {
                 errorMessage = `❌ Erro: ${error.message}`;
             }
             
