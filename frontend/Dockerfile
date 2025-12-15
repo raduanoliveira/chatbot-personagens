@@ -38,7 +38,16 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copia configuração customizada do nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# Cria diretório de logs e garante permissões
+RUN mkdir -p /var/log/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /usr/share/nginx/html
+
+# Testa configuração do nginx antes de iniciar
+RUN nginx -t
+
 EXPOSE 80
 
+# Inicia nginx em foreground
 CMD ["nginx", "-g", "daemon off;"]
 
