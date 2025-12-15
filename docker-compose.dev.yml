@@ -40,7 +40,7 @@ services:
       MODERATION_ENABLED: ${MODERATION_ENABLED:-true}
       MODERATION_LEVEL: ${MODERATION_LEVEL:-moderate}
     ports:
-      - "8000:8000"
+      - "7000:7000"
     depends_on:
       db:
         condition: service_healthy
@@ -53,7 +53,7 @@ services:
         echo 'Aguardando banco de dados...' &&
         sleep 5 &&
         alembic upgrade head &&
-        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+        uvicorn app.main:app --host 0.0.0.0 --port 7000 --reload
       "
 
   # Frontend React (modo desenvolvimento com Vite dev server)
@@ -62,7 +62,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://10.6.3.105:8000}
+        VITE_API_URL: ${VITE_API_URL:-http://10.6.3.105:7000}
     image: chatpersonagens-frontend:latest
     container_name: mario_chat_frontend
     restart: unless-stopped

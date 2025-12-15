@@ -13,7 +13,7 @@ RUN npm ci --no-audit --no-fund
 COPY . .
 
 # ARG para variáveis de build
-ARG VITE_API_URL=http://localhost:8000
+ARG VITE_API_URL=http://localhost:7000
 ENV VITE_API_URL=$VITE_API_URL
 
 # Build da aplicação

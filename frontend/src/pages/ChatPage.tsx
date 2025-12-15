@@ -114,7 +114,7 @@ export function ChatPage({ onNavigateToCharacters }: ChatPageProps) {
                     <p style={{ fontSize: "0.9rem", marginTop: "0.5rem" }}>
                         {charactersQuery.error instanceof Error 
                             ? charactersQuery.error.message 
-                            : "Verifique se o backend está rodando em http://localhost:8000"}
+                            : "Verifique se o backend está rodando em http://localhost:7000"}
                     </p>
                     <button
                         onClick={onNavigateToCharacters}

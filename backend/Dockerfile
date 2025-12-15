@@ -48,11 +48,11 @@ ENV PYTHONPATH=/app
 COPY . .
 
 # Expõe a porta
-EXPOSE 8000
+EXPOSE 7000
 
 # Comando para iniciar a aplicação
 # Executa migrations antes de iniciar o servidor
 # Garante que estamos no diretório correto e que o PYTHONPATH está configurado
-CMD sh -c "cd /app && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+CMD sh -c "cd /app && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 7000"
 
 
