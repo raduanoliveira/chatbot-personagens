@@ -108,8 +108,21 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
         return ChatResponse(response=assistant_message)
     
     except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Erro ao comunicar com a API da OpenAI: {str(e)}", exc_info=True)
+        
+        # Mensagem de erro mais amigável
+        error_detail = str(e)
+        if "api_key" in error_detail.lower() or "authentication" in error_detail.lower():
+            error_detail = "Chave da API da OpenAI inválida ou não configurada"
+        elif "rate limit" in error_detail.lower():
+            error_detail = "Limite de requisições excedido. Tente novamente em alguns instantes."
+        elif "timeout" in error_detail.lower():
+            error_detail = "Tempo de resposta excedido. Tente novamente."
+        
         raise HTTPException(
             status_code=500,
-            detail=f"Erro ao comunicar com a API da OpenAI: {str(e)}"
+            detail=f"Erro ao processar mensagem: {error_detail}"
         )
 

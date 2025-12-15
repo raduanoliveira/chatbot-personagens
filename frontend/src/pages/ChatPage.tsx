@@ -74,13 +74,28 @@ export function ChatPage({ onNavigateToCharacters }: ChatPageProps) {
                 ...newConversation,
                 { role: "assistant" as const, content: response.response },
             ]);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao enviar mensagem:", error);
+            
+            // Extrai mensagem de erro mais detalhada
+            let errorMessage = "❌ Erro ao processar sua mensagem. Tente novamente.";
+            
+            if (error?.response?.data?.detail) {
+                // Erro do backend com detalhes
+                errorMessage = `❌ Erro: ${error.response.data.detail}`;
+            } else if (error?.response?.status === 500) {
+                errorMessage = "❌ Erro interno do servidor. Verifique os logs do backend.";
+            } else if (error?.response?.status === 404) {
+                errorMessage = "❌ Personagem não encontrado.";
+            } else if (error?.message) {
+                errorMessage = `❌ Erro: ${error.message}`;
+            }
+            
             setConversation([
                 ...newConversation,
                 {
                     role: "assistant" as const,
-                    content: "❌ Erro ao processar sua mensagem. Tente novamente.",
+                    content: errorMessage,
                 },
             ]);
         } finally {
