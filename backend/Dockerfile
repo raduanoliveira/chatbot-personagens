@@ -47,6 +47,16 @@ ENV PYTHONPATH=/app
 # Copia apenas o código da aplicação (não requirements.txt)
 COPY . .
 
+# Debug: lista arquivos após cópia para diagnosticar problemas no Railway
+RUN echo "=== Estrutura de diretórios após COPY ===" && \
+    ls -la /app && \
+    echo "=== Conteúdo de app/ ===" && \
+    ls -la /app/app/ 2>/dev/null || echo "ERRO: app/ não encontrado" && \
+    echo "=== Conteúdo de app/core/ ===" && \
+    ls -la /app/app/core/ 2>/dev/null || echo "ERRO: app/core/ não encontrado" && \
+    echo "=== Verificando app/core/config.py ===" && \
+    test -f /app/app/core/config.py && echo "✅ app/core/config.py encontrado" || echo "❌ app/core/config.py NÃO encontrado"
+
 # Expõe a porta
 EXPOSE 7000
 

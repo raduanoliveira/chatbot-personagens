@@ -14,13 +14,45 @@ if str(BASE_DIR) not in sys.path:
 
 # Verifica se o módulo app existe antes de importar
 import os
+# Debug: lista o que existe no BASE_DIR
 if not os.path.exists(os.path.join(BASE_DIR, "app")):
+    print(f"❌ ERRO: Diretório 'app' não encontrado em {BASE_DIR}")
+    print(f"📁 Conteúdo de {BASE_DIR}:")
+    try:
+        for item in os.listdir(BASE_DIR):
+            print(f"  - {item}")
+    except Exception as e:
+        print(f"  Erro ao listar: {e}")
     raise RuntimeError(f"Diretório 'app' não encontrado em {BASE_DIR}")
+
 if not os.path.exists(os.path.join(BASE_DIR, "app", "core")):
+    print(f"❌ ERRO: Diretório 'app/core' não encontrado em {BASE_DIR}")
+    print(f"📁 Conteúdo de {os.path.join(BASE_DIR, 'app')}:")
+    try:
+        for item in os.listdir(os.path.join(BASE_DIR, "app")):
+            print(f"  - {item}")
+    except Exception as e:
+        print(f"  Erro ao listar: {e}")
     raise RuntimeError(f"Diretório 'app/core' não encontrado em {BASE_DIR}")
+
 if not os.path.exists(os.path.join(BASE_DIR, "app", "core", "__init__.py")):
+    print(f"❌ ERRO: Arquivo 'app/core/__init__.py' não encontrado em {BASE_DIR}")
+    print(f"📁 Conteúdo de {os.path.join(BASE_DIR, 'app', 'core')}:")
+    try:
+        for item in os.listdir(os.path.join(BASE_DIR, "app", "core")):
+            print(f"  - {item}")
+    except Exception as e:
+        print(f"  Erro ao listar: {e}")
     raise RuntimeError(f"Arquivo 'app/core/__init__.py' não encontrado em {BASE_DIR}")
+
 if not os.path.exists(os.path.join(BASE_DIR, "app", "core", "config.py")):
+    print(f"❌ ERRO: Arquivo 'app/core/config.py' não encontrado em {BASE_DIR}")
+    print(f"📁 Conteúdo de {os.path.join(BASE_DIR, 'app', 'core')}:")
+    try:
+        for item in os.listdir(os.path.join(BASE_DIR, "app", "core")):
+            print(f"  - {item}")
+    except Exception as e:
+        print(f"  Erro ao listar: {e}")
     raise RuntimeError(f"Arquivo 'app/core/config.py' não encontrado em {BASE_DIR}")
 
 from app.core.config import settings  # noqa: E402
