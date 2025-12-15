@@ -47,22 +47,15 @@ ENV PYTHONPATH=/app
 # Copia apenas o código da aplicação (não requirements.txt)
 COPY . .
 
-# Debug: lista arquivos após cópia para diagnosticar problemas no Railway
-RUN echo "=== Estrutura de diretórios após COPY ===" && \
-    ls -la /app && \
-    echo "=== Conteúdo de app/ ===" && \
-    ls -la /app/app/ 2>/dev/null || echo "ERRO: app/ não encontrado" && \
-    echo "=== Conteúdo de app/core/ ===" && \
-    ls -la /app/app/core/ 2>/dev/null || echo "ERRO: app/core/ não encontrado" && \
-    echo "=== Verificando app/core/config.py ===" && \
-    test -f /app/app/core/config.py && echo "✅ app/core/config.py encontrado" || echo "❌ app/core/config.py NÃO encontrado"
+# Copia e torna executável o script de inicialização
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Expõe a porta
 EXPOSE 7000
 
 # Comando para iniciar a aplicação
-# Executa migrations antes de iniciar o servidor
-# Garante que estamos no diretório correto e que o PYTHONPATH está configurado
-CMD sh -c "cd /app && alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 7000"
+# Usa o script start.sh que tem retry logic para migrations
+CMD ["/app/start.sh"]
 
 
