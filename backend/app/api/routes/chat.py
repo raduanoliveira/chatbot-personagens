@@ -35,15 +35,26 @@ def get_openai_client():
 @router.post("/", response_model=ChatResponse)
 def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     """Envia uma mensagem para o personagem e retorna a resposta."""
+    import time
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    start_time = time.time()
+    
+    # Busca personagem
+    step_start = time.time()
     character = db.get(Character, payload.character_id)
     if not character:
         raise HTTPException(status_code=404, detail="Personagem não encontrado.")
+    logger.info(f"⏱️  [PERF] Buscar personagem: {(time.time() - step_start)*1000:.2f}ms")
     
     # Validação de entrada com guardrails (apenas palavrões para performance)
+    step_start = time.time()
     if settings.moderation_enabled:
         guardrails = get_guardrails()
         # Verifica apenas palavrões na entrada (toxicidade é lenta, verifica apenas na saída)
         input_moderation = guardrails.moderate(payload.message, check_type="input")
+        logger.info(f"⏱️  [PERF] Moderação entrada: {(time.time() - step_start)*1000:.2f}ms")
         
         if not input_moderation:
             # Mensagem genérica para não expor detalhes da moderação
@@ -60,10 +71,16 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
                 )
             
             return ChatResponse(response=safe_response)
+    else:
+        logger.info(f"⏱️  [PERF] Moderação desabilitada: {(time.time() - step_start)*1000:.2f}ms")
     
+    # Prepara cliente OpenAI
+    step_start = time.time()
     client = get_openai_client()
+    logger.info(f"⏱️  [PERF] Criar cliente OpenAI: {(time.time() - step_start)*1000:.2f}ms")
     
     # Monta o histórico de mensagens
+    step_start = time.time()
     messages = [
         {"role": "system", "content": character.system_prompt}
     ]
@@ -73,24 +90,32 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     
     # Adiciona a mensagem atual do usuário
     messages.append({"role": "user", "content": payload.message})
+    logger.info(f"⏱️  [PERF] Preparar mensagens: {(time.time() - step_start)*1000:.2f}ms")
     
     try:
+        # Chama OpenAI
+        step_start = time.time()
+        logger.info(f"⏱️  [PERF] Iniciando chamada OpenAI...")
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
             temperature=0.8,
             max_tokens=2000  # Aumentado para permitir respostas mais completas
         )
+        openai_time = (time.time() - step_start) * 1000
+        logger.info(f"⏱️  [PERF] OpenAI respondeu: {openai_time:.2f}ms ({openai_time/1000:.2f}s)")
         
         assistant_message = response.choices[0].message.content
         
         # Validação de saída com guardrails (apenas palavrões para performance)
+        step_start = time.time()
         # Nota: Verificação de toxicidade na saída foi desabilitada para melhorar performance
         # A OpenAI já faz moderação de conteúdo, então isso é redundante
         if settings.moderation_enabled:
             guardrails = get_guardrails()
             # Verifica apenas palavrões na saída (rápido)
             output_moderation = guardrails.moderate(assistant_message, check_type="input")
+            logger.info(f"⏱️  [PERF] Moderação saída: {(time.time() - step_start)*1000:.2f}ms")
             
             if not output_moderation:
                 # Se a resposta do assistente for inadequada, retorna mensagem segura
@@ -107,6 +132,11 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
                     )
                 
                 return ChatResponse(response=safe_response)
+        else:
+            logger.info(f"⏱️  [PERF] Moderação saída desabilitada: {(time.time() - step_start)*1000:.2f}ms")
+        
+        total_time = (time.time() - start_time) * 1000
+        logger.info(f"⏱️  [PERF] Total: {total_time:.2f}ms ({total_time/1000:.2f}s)")
         
         return ChatResponse(response=assistant_message)
     
