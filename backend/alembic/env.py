@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 
 import pymysql
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import engine_from_config, pool, text
 
 from alembic import context
 
@@ -159,6 +159,22 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
+        # Limpa revisões antigas que não existem mais
+        try:
+            result = connection.execute(text("SELECT version_num FROM alembic_version LIMIT 1"))
+            row = result.fetchone()
+            if row:
+                version = row[0]
+                old_revisions = ['fa3c80dae25c', '88ab14753bca']
+                if version in old_revisions:
+                    print(f"⚠️  Revisão antiga encontrada: {version}. Limpando...")
+                    connection.execute(text("DELETE FROM alembic_version"))
+                    connection.commit()
+                    print("✅ Tabela alembic_version limpa!")
+        except Exception as e:
+            # Se a tabela não existir ou houver erro, continua normalmente
+            print(f"ℹ️  Não foi possível verificar alembic_version: {e}")
+        
         context.configure(
             connection=connection, target_metadata=target_metadata
         )

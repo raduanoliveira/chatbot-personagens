@@ -47,9 +47,10 @@ ENV PYTHONPATH=/app
 # Copia apenas o código da aplicação (não requirements.txt)
 COPY . .
 
-# Copia e torna executável o script de inicialização
+# Copia e torna executáveis os scripts de inicialização
 COPY start.sh /app/start.sh
-RUN chmod +x /app/start.sh
+COPY clean_alembic.py /app/clean_alembic.py
+RUN chmod +x /app/start.sh /app/clean_alembic.py
 
 # Expõe a porta
 EXPOSE 7000
