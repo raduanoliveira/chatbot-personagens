@@ -62,10 +62,22 @@ class CharacterOut(BaseModel):
     catchphrase: Optional[str] = None
     personality_traits: List[str] = Field(default_factory=list)
     image_url: Optional[str] = None
-    who_is_character: str
-    phrases: List[PhraseOut]  # Retorna as frases completas com IDs
+    who_is_character: str = Field(default="", description="Descrição de quem é o personagem")
+    phrases: List[PhraseOut] = Field(default_factory=list)  # Retorna as frases completas com IDs
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
     class Config:
         from_attributes = True
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_character_data(cls, data):
+        # Se who_is_character não existir (banco antigo), usa string vazia
+        if isinstance(data, dict):
+            if 'who_is_character' not in data or data['who_is_character'] is None:
+                data['who_is_character'] = ""
+            # Garante que phrases seja uma lista
+            if 'phrases' not in data or data['phrases'] is None:
+                data['phrases'] = []
+        return data

@@ -14,23 +14,44 @@ router = APIRouter(prefix="/characters", tags=["characters"])
 
 @router.get("/", response_model=List[CharacterOut])
 def list_characters(db: Session = Depends(get_db)):
+    import logging
+    import traceback
+    logger = logging.getLogger(__name__)
+    
     try:
         stmt = select(Character).options(joinedload(Character.phrases)).order_by(Character.name.asc())
         result = db.execute(stmt).unique().scalars().all()
+        
         # Garante que todos os personagens têm phrases (mesmo que vazia)
         for character in result:
-            if not hasattr(character, 'phrases') or character.phrases is None:
+            try:
+                # Tenta acessar phrases - pode falhar se a tabela não existe
+                if not hasattr(character, 'phrases') or character.phrases is None:
+                    character.phrases = []
+                # Se phrases existe mas está vazio, garante que seja uma lista
+                elif not isinstance(character.phrases, list):
+                    character.phrases = []
+            except Exception as phrase_error:
+                # Se houver erro ao acessar phrases (tabela não existe, etc), define como lista vazia
+                logger.warning(f"Erro ao carregar phrases para personagem {character.id}: {phrase_error}")
                 character.phrases = []
+        
         return result
     except Exception as e:
-        import logging
-        import traceback
-        logger = logging.getLogger(__name__)
         error_trace = traceback.format_exc()
         logger.error(f"Erro ao listar personagens: {e}\n{error_trace}")
+        
+        # Verifica se o erro é relacionado à estrutura do banco
+        error_msg = str(e).lower()
+        if 'phrases' in error_msg or 'table' in error_msg or 'column' in error_msg:
+            raise HTTPException(
+                status_code=500, 
+                detail="Erro ao listar personagens. O banco de dados precisa ser atualizado. Execute as migrations: alembic upgrade head"
+            )
+        
         raise HTTPException(
             status_code=500, 
-            detail=f"Erro ao listar personagens. Verifique se as migrations foram executadas. Erro: {str(e)}"
+            detail=f"Erro ao listar personagens: {str(e)}"
         )
 
 
