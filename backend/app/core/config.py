@@ -38,7 +38,7 @@ class Settings(BaseSettings):
         default=None,
         validation_alias="OPENAI_API_KEY",
     )
-    
+
     # Guardrails configuration
     moderation_enabled: bool = Field(
         default=True,

@@ -334,6 +334,10 @@
   border-radius: 12px;
   margin-bottom: 1rem;
   font-weight: 600;
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  z-index: 9999 !important;
 }
 
 .toast--success {
@@ -344,6 +348,26 @@
 .toast--error {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 960px) {
+  .toast {
+    top: 1rem !important;
+    right: 1rem !important;
+    left: 1rem !important;
+    max-width: calc(100% - 2rem);
+  }
 }
 
 .empty-state {

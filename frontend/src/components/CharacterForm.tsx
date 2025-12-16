@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import type { Character, CharacterPayload } from "../types/character";
+import { AVAILABLE_PURPOSES } from "../types/character";
 
 const schema = z.object({
     name: z.string().min(2, "Informe pelo menos 2 caracteres"),
@@ -15,8 +16,37 @@ const schema = z.object({
         .url("Informe uma URL válida")
         .optional()
         .or(z.literal("")),
-    system_prompt: z.string().min(1, "O contexto do prompt é obrigatório"),
-});
+    who_is_character: z.string().min(1, "Este campo é obrigatório").max(255, "Máximo de 255 caracteres"),
+    phrases: z.array(
+        z.object({
+            phrase: z.string().min(1, "A fala é obrigatória"),
+            purpose: z.string().min(1, "A finalidade é obrigatória"),
+        })
+    ).length(5, "É necessário preencher todas as 5 finalidades"),
+}).refine(
+    (data) => {
+        // Verifica se todas as finalidades estão presentes
+        const purposes = data.phrases.map(p => p.purpose);
+        const requiredPurposes = new Set(AVAILABLE_PURPOSES);
+        const providedPurposes = new Set(purposes);
+        return requiredPurposes.size === providedPurposes.size && 
+               Array.from(requiredPurposes).every(p => providedPurposes.has(p));
+    },
+    {
+        message: "Todas as finalidades devem ser preenchidas e não pode haver duplicatas",
+        path: ["phrases"],
+    }
+).refine(
+    (data) => {
+        // Verifica se não há finalidades duplicadas
+        const purposes = data.phrases.map(p => p.purpose);
+        return purposes.length === new Set(purposes).size;
+    },
+    {
+        message: "Não pode haver duas falas com a mesma finalidade",
+        path: ["phrases"],
+    }
+);
 
 type FormValues = z.infer<typeof schema>;
 
@@ -33,7 +63,8 @@ const defaultValues: FormValues = {
     catchphrase: "",
     personalityTraits: "",
     image_url: "",
-    system_prompt: "",
+    who_is_character: "",
+    phrases: AVAILABLE_PURPOSES.map(purpose => ({ phrase: "", purpose })),
 };
 
 export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }: CharacterFormProps) {
@@ -42,10 +73,16 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
         handleSubmit,
         reset,
         setValue,
+        control,
         formState: { errors },
     } = useForm<FormValues>({
         resolver: zodResolver(schema),
         defaultValues,
+    });
+
+    const { fields } = useFieldArray({
+        control,
+        name: "phrases",
     });
 
     // Usa estado local em vez de watch para ter controle total
@@ -58,13 +95,22 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
     useEffect(() => {
         if (selected) {
             const imageUrlValue = selected.image_url ?? "";
+            
+            // Mapeia as phrases do personagem para o formato do formulário
+            const phrasesMap = new Map(selected.phrases.map(p => [p.purpose, p.phrase]));
+            const phrases = AVAILABLE_PURPOSES.map(purpose => ({
+                phrase: phrasesMap.get(purpose) || "",
+                purpose,
+            }));
+            
             reset({
                 name: selected.name,
                 description: selected.description ?? "",
                 catchphrase: selected.catchphrase ?? "",
                 personalityTraits: selected.personality_traits?.join(", ") ?? "",
                 image_url: imageUrlValue,
-                system_prompt: selected.system_prompt ?? "",
+                who_is_character: selected.who_is_character ?? "",
+                phrases,
             });
             // Necessário sincronizar estado local com o formulário
             setImageUrl(imageUrlValue);
@@ -175,6 +221,23 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
     }, [imageUrl]);
 
     const submitHandler = (values: FormValues) => {
+        // Processa image_url: se vazio ou inválido, envia undefined
+        let imageUrlValue: string | undefined = undefined;
+        if (imageUrl && imageUrl.trim()) {
+            try {
+                // Valida se é uma URL válida ou data URI
+                if (imageUrl.startsWith('data:')) {
+                    imageUrlValue = imageUrl;
+                } else {
+                    new URL(imageUrl);
+                    imageUrlValue = imageUrl;
+                }
+            } catch {
+                // URL inválida, envia undefined
+                imageUrlValue = undefined;
+            }
+        }
+        
         const payload: CharacterPayload = {
             name: values.name,
             description: values.description || undefined,
@@ -185,13 +248,28 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
                       .map((trait) => trait.trim())
                       .filter(Boolean)
                 : [],
-            // Usa o estado local imageUrl em vez do values.image_url
-            image_url: imageUrl || undefined,
-            system_prompt: values.system_prompt || undefined,
+            image_url: imageUrlValue,
+            who_is_character: values.who_is_character,
+            phrases: values.phrases.map(p => ({
+                phrase: p.phrase.trim(),
+                purpose: p.purpose,
+            })),
         };
 
+        console.log("📤 Payload sendo enviado:", JSON.stringify(payload, null, 2));
         onSubmit(payload, selected?.id);
     };
+
+    // Limpa campos quando não há personagem selecionado (após criação bem-sucedida)
+    useEffect(() => {
+        if (!selected) {
+            reset(defaultValues);
+            setImageUrl("");
+            setImagePreview(null);
+            setImageError(false);
+            setImageLoading(false);
+        }
+    }, [selected, reset]);
 
     return (
         <form className="character-form" onSubmit={handleSubmit(submitHandler)}>
@@ -211,6 +289,17 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
                 Nome *
                 <input type="text" {...register("name")} placeholder="Mario Bros" />
                 {errors.name && <span className="error">{errors.name.message}</span>}
+            </label>
+
+            <label>
+                Quem é o personagem? *
+                <input 
+                    type="text" 
+                    {...register("who_is_character")} 
+                    placeholder="o famoso encanador italiano do Reino dos Cogumelos"
+                    maxLength={255}
+                />
+                {errors.who_is_character && <span className="error">{errors.who_is_character.message}</span>}
             </label>
 
             <label>
@@ -304,16 +393,53 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
                 )}
             </label>
 
-            <label>
-                Contexto do prompt *
-                <textarea
-                    {...register("system_prompt")}
-                    rows={5}
-                    placeholder="Instruções específicas usadas pelo modelo"
-                    required
-                />
-                {errors.system_prompt && <span className="error">{errors.system_prompt.message}</span>}
-            </label>
+            <div style={{ marginTop: "1.5rem" }}>
+                <h3 style={{ marginBottom: "1rem" }}>Falas do personagem *</h3>
+                <p style={{ fontSize: "0.9rem", color: "#666", marginBottom: "1rem" }}>
+                    Preencha uma fala para cada finalidade. Todas são obrigatórias.
+                </p>
+                
+                {fields.map((field, index) => {
+                    // Placeholders baseados nas falas do seed do Mario
+                    const placeholders: Record<string, string> = {
+                        "para se apresentar": "It's-a me, Mario!",
+                        "para surpresa": "Mamma mia!",
+                        "para animar": "Let's-a go!",
+                        "para comemorações": "Wahoo!",
+                        "para começar algo": "Here we go!",
+                    };
+                    
+                    const placeholder = placeholders[field.purpose] || "Digite a fala...";
+                    
+                    return (
+                        <div key={field.id} style={{ marginBottom: "1rem" }}>
+                            <label>
+                                Fala: {field.purpose} *
+                                <input
+                                    type="text"
+                                    {...register(`phrases.${index}.phrase`)}
+                                    placeholder={placeholder}
+                                    maxLength={255}
+                                />
+                                <input
+                                    type="hidden"
+                                    {...register(`phrases.${index}.purpose`)}
+                                    value={field.purpose}
+                                />
+                                {errors.phrases?.[index]?.phrase && (
+                                    <span className="error">{errors.phrases[index]?.phrase?.message}</span>
+                                )}
+                            </label>
+                        </div>
+                    );
+                })}
+                
+                {errors.phrases && typeof errors.phrases.message === 'string' && (
+                    <span className="error" style={{ display: "block", marginTop: "0.5rem" }}>
+                        {errors.phrases.message}
+                    </span>
+                )}
+            </div>
 
             <div className="character-form__actions">
                 {selected ? (
@@ -342,5 +468,3 @@ export function CharacterForm({ selected, onSubmit, onCancelEdit, isSubmitting }
         </form>
     );
 }
-
-

@@ -2,7 +2,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload
 from openai import OpenAI
 
 from app.database import get_db
@@ -44,9 +45,11 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     start_time = time.time()
     perf_data = {}  # Armazena tempos de cada etapa
     
-    # Busca personagem
+    # Busca personagem com suas phrases
     step_start = time.time()
-    character = db.get(Character, payload.character_id)
+    character = db.execute(
+        select(Character).options(joinedload(Character.phrases)).where(Character.id == payload.character_id)
+    ).unique().scalar_one_or_none()
     if not character:
         raise HTTPException(status_code=404, detail="Personagem não encontrado.")
     perf_data["buscar_personagem_ms"] = round((time.time() - step_start) * 1000, 2)
@@ -86,10 +89,28 @@ def chat(payload: ChatMessage, db: Session = Depends(get_db)):
     perf_data["criar_cliente_openai_ms"] = round((time.time() - step_start) * 1000, 2)
     logger.info(f"⏱️  [PERF] Criar cliente OpenAI: {perf_data['criar_cliente_openai_ms']}ms")
     
-    # Monta o histórico de mensagens
+    # Gera o prompt do sistema em tempo real
     step_start = time.time()
+    
+    # Monta a lista de falas formatadas
+    phrases_list = []
+    for phrase in character.phrases:
+        phrases_list.append(f'- "{phrase.phrase}" {phrase.purpose}')
+    phrases_text = "\n".join(phrases_list)
+    
+    # Formata os traços de personalidade
+    traits_text = ", ".join(character.personality_traits) if character.personality_traits else "carismático"
+    
+    # Gera o prompt do sistema
+    system_prompt = f"""Você é o {character.name}, {character.who_is_character}.
+Você tem a personalidade {traits_text} e utiliza falas como:
+{phrases_text}
+
+Fale em português brasileiro, mas mantenha algumas expressões características do personagem. Seja amigável, divertido e mantenha o espírito do personagem. Use emojis ocasionalmente para dar mais vida à conversa! 🍄⭐"""
+    
+    # Monta o histórico de mensagens
     messages = [
-        {"role": "system", "content": character.system_prompt}
+        {"role": "system", "content": system_prompt}
     ]
     
     # Adiciona histórico da conversa

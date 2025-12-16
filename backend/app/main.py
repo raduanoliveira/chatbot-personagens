@@ -1,12 +1,37 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
+import logging
 
 from app.api.routes.characters import router as characters_router
 from app.api.routes.chat import router as chat_router
 from app.core.config import settings
 from app.core.guardrails import initialize_guardrails, ModerationLevel
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title=settings.app_name)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Captura erros de validação do Pydantic e loga detalhes."""
+    body = await request.body()
+    logger.error(f"❌ Erro de validação na rota {request.url.path}:")
+    logger.error(f"   Método: {request.method}")
+    logger.error(f"   Erros: {exc.errors()}")
+    try:
+        import json
+        body_str = json.dumps(json.loads(body.decode('utf-8')), indent=2, ensure_ascii=False)
+        logger.error(f"   Body recebido:\n{body_str}")
+    except Exception:
+        logger.error(f"   Body recebido (raw): {body.decode('utf-8', errors='ignore')[:500]}")
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
+    )
 
 app.add_middleware(
     CORSMiddleware,

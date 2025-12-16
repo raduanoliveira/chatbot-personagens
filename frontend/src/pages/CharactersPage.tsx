@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
@@ -35,6 +36,11 @@ export function CharactersPage({ onNavigateToChat }: CharactersPageProps) {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["characters"] });
             setToast({ type: "success", message: "Personagem criado com sucesso!" });
+            // Limpa campos e fecha formulário
+            setSelected(null);
+            setShowForm(false);
+            // Scroll para o topo
+            window.scrollTo({ top: 0, behavior: "smooth" });
         },
         onError: () => {
             setToast({ type: "error", message: "Erro ao criar personagem." });
@@ -67,11 +73,14 @@ export function CharactersPage({ onNavigateToChat }: CharactersPageProps) {
     const handleSubmit = (payload: CharacterPayload, id?: number) => {
         if (id) {
             updateMutation.mutate({ id, payload });
+            // Para edição, também fecha o formulário e faz scroll
+            setSelected(null);
+            setShowForm(false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
             createMutation.mutate(payload);
+            // Para criação, o onSuccess já faz tudo
         }
-        setSelected(null);
-        setShowForm(false);
     };
 
     const handleDelete = (character: Character) => {
@@ -94,7 +103,37 @@ export function CharactersPage({ onNavigateToChat }: CharactersPageProps) {
 
     const isMutating = createMutation.isPending || updateMutation.isPending;
 
+    // Auto-dismiss toast após 3 segundos
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => {
+                setToast(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
+
     return (
+        <>
+            {toast && createPortal(
+                <div 
+                    className={`toast toast--${toast.type}`} 
+                    onClick={() => setToast(null)}
+                    style={{
+                        position: "fixed",
+                        top: "1rem",
+                        right: "1rem",
+                        zIndex: 9999,
+                        cursor: "pointer",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                        animation: "slideIn 0.3s ease-out",
+                        maxWidth: "400px",
+                    }}
+                >
+                    {toast.message}
+                </div>,
+                document.body
+            )}
         <main className="page">
             <header className="page__header">
                 <div>
@@ -117,12 +156,6 @@ export function CharactersPage({ onNavigateToChat }: CharactersPageProps) {
                     </div>
                 </div>
             </header>
-
-            {toast && (
-                <div className={`toast toast--${toast.type}`} onClick={() => setToast(null)}>
-                    {toast.message}
-                </div>
-            )}
 
             <ConfirmDialog
                 isOpen={!!deleteConfirm}
@@ -189,6 +222,7 @@ export function CharactersPage({ onNavigateToChat }: CharactersPageProps) {
                 </div>
             </section>
         </main>
+        </>
     );
 }
 
