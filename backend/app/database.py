@@ -44,7 +44,15 @@ def ensure_database_exists():
 
 
 # Garante que o banco existe antes de criar o engine
-ensure_database_exists()
+# Não falha se o MySQL não estiver disponível - apenas loga o erro
+try:
+    ensure_database_exists()
+except Exception as e:
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.warning(f"⚠️  Não foi possível verificar/criar banco de dados: {e}")
+    logger.warning("   Isso é normal se o MySQL ainda não estiver disponível.")
+    logger.warning("   O Alembic tentará criar o banco durante as migrations.")
 
 engine = create_engine(settings.database_url, pool_pre_ping=True)
 

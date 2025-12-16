@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Script de inicialização com retry para conexão MySQL
-set -e
+# Não usa set -e para permitir tratamento de erros
 
 echo "🚀 Iniciando aplicação..."
 
@@ -72,7 +72,12 @@ run_migrations_with_retry() {
 }
 
 # Tenta executar migrations com retry
-run_migrations_with_retry || echo "⚠️  Migrations falharam, mas continuando..."
+if ! run_migrations_with_retry; then
+    echo "❌ ERRO CRÍTICO: Migrations falharam após múltiplas tentativas!"
+    echo "📋 Verifique os logs acima para mais detalhes."
+    echo "💡 Dica: Verifique se o MySQL está acessível e se as variáveis de ambiente estão corretas."
+    exit 1
+fi
 
 # Inicia o servidor
 echo "🌐 Iniciando servidor uvicorn na porta 7000..."
