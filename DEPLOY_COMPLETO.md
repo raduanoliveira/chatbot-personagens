@@ -207,3 +207,5 @@ Execute o seed manual: use o arquivo `seed_mario.sql` na aba Database do MySQL n
 
 **Aproveite seu chatbot de personagens! 🍄⭐🎮**
 
+
+
